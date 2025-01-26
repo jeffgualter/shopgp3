@@ -9,10 +9,6 @@ const PORT = 3000;
 
 // Habilita CORS para todas as requisições
 app.use(cors());
-origin: 'https://emprestimonaweb.com.br', // Substitua '*' pela URL do frontend para mais segurança
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type'],
-}));
 
 // Diretório com os arquivos CSV
 const DATA_DIR = path.join(__dirname, "data");
