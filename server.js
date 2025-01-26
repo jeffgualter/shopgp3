@@ -104,3 +104,4 @@ app.get("/top-searches", (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
