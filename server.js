@@ -5,13 +5,19 @@ const csvParser = require("csv-parser");
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Porta configurável via variável de ambiente
 
 // Habilita CORS para todas as requisições
 app.use(cors());
 
 // Diretório com os arquivos CSV
 const DATA_DIR = path.join(__dirname, "data");
+
+// Verifica se o diretório de dados existe
+if (!fs.existsSync(DATA_DIR)) {
+    console.error(`Erro: Diretório de dados '${DATA_DIR}' não encontrado.`);
+    process.exit(1);
+}
 
 // Objeto para rastrear termos de busca e produtos
 const searchTracker = {};
@@ -32,14 +38,13 @@ const searchCSVFiles = (query) => {
                 fs.createReadStream(path.join(DATA_DIR, file))
                     .pipe(csvParser())
                     .on("data", (row) => {
+                        const price = parseFloat(row.search_price);
                         if (
                             row.product_name &&
+                            !isNaN(price) &&
                             row.product_name.toLowerCase().includes(query.toLowerCase())
                         ) {
-                            results.push({
-                                ...row,
-                                search_price: parseFloat(row.search_price || "0"),
-                            });
+                            results.push({ ...row, search_price: price });
                         }
                     })
                     .on("end", () => {
@@ -50,6 +55,7 @@ const searchCSVFiles = (query) => {
                         }
                     })
                     .on("error", (error) => {
+                        console.error(`Erro ao processar o arquivo ${file}:`, error);
                         reject(error);
                     });
             });
@@ -65,6 +71,7 @@ app.get("/search", async (req, res) => {
     }
 
     try {
+        console.log(`Consulta recebida: ${query}`);
         const results = await searchCSVFiles(query);
 
         // Rastrear buscas e armazenar o produto mais caro
