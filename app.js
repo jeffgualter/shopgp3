@@ -143,3 +143,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // Inicializar carregamento dos Top Termos de Busca ao carregar a página
     fetchTopSearches();
 });
+
