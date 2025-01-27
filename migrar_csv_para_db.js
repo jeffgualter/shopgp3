@@ -14,10 +14,10 @@ const pool = new Pool({
 });
 
 // Caminho para o diretório de dados
-const dadosDir = path.join(__dirname, 'dados');
+const dadosDir = path.join(__dirname, 'data');
 
-// Nome do arquivo CSV (atualize conforme necessário)
-const csvFile = path.join(dadosDir, 'produtos.csv');
+// Nome do arquivo CSV (atualizado para o arquivo correto)
+const csvFile = path.join(dadosDir, 'vasco.csv');
 
 // Função para migrar os dados do CSV para o banco de dados
 async function migrarCSVParaDB() {
