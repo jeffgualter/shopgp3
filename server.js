@@ -1,12 +1,11 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const csvParser = require("csv-parser");
-const cors = require("cors");
+// Importando as dependências
+const express = require('express');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = 3000;
 
+<<<<<<< HEAD
 // Habilita CORS para todas as requisições
 app.use(cors());
 
@@ -101,7 +100,59 @@ app.get("/top-searches", (req, res) => {
 });
             
 // Inicia o servidor
+=======
+// Configuração da conexão com o banco de dados
+const pool = new Pool({
+  user: 'feed_produtos_user', // Substitua pelo usuário do banco na Render
+  host: 'dpg-cub7al52ng1s73amrd00-a.oregon-postgres.render.com', // Host do banco na Render
+  database: 'feed_produtos', // Nome do banco
+  password: 'LUndYbcuwxtLIrJkXnj39LfJtOaqHKlq', // Substitua pela senha do banco
+  port: 5432,
+  ssl: { rejectUnauthorized: false }, // Configuração necessária para a Render
+});
+
+// Middleware para lidar com JSON
+app.use(express.json());
+
+// Rota de pesquisa de produtos
+app.get('/produtos/pesquisa', async (req, res) => {
+  const { query } = req.query; // Obtém o termo de pesquisa
+
+  if (!query) {
+    return res.status(400).json({ error: 'Por favor, forneça um termo de pesquisa.' });
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM products WHERE name ILIKE $1",
+      [`%${query}%`]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar produtos:', error);
+    res.status(500).json({ error: 'Erro ao buscar produtos.' });
+  }
+});
+
+// Rota para "Top Buscas" (exemplo: produtos mais consultados)
+app.get('/produtos/top', async (req, res) => {
+  try {
+    // Exemplo básico de top buscas: produtos com maior preço (apenas para demonstração)
+    const result = await pool.query(
+      "SELECT * FROM products ORDER BY price DESC LIMIT 10"
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar top produtos:', error);
+    res.status(500).json({ error: 'Erro ao buscar top produtos.' });
+  }
+});
+
+// Inicializando o servidor
+>>>>>>> 05ad444 (Atualizar configuração para banco de dados na Render)
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
