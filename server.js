@@ -5,7 +5,6 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = 3000;
 
-<<<<<<< HEAD
 // Habilita CORS para todas as requisições
 app.use(cors());
 
@@ -100,7 +99,6 @@ app.get("/top-searches", (req, res) => {
 });
             
 // Inicia o servidor
-=======
 // Configuração da conexão com o banco de dados
 const pool = new Pool({
   user: 'feed_produtos_user', // Substitua pelo usuário do banco na Render
