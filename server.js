@@ -1,12 +1,17 @@
 // Importando as dependências
 const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const csvParser = require('csv-parser');
+const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Habilita CORS para todas as requisições
+// Habilita CORS e JSON para todas as requisições
 app.use(cors());
+app.use(express.json());
 
 // Diretório com os arquivos CSV
 const DATA_DIR = path.join(__dirname, "data");
@@ -30,10 +35,7 @@ const searchCSVFiles = (query) => {
                 fs.createReadStream(path.join(DATA_DIR, file))
                     .pipe(csvParser())
                     .on("data", (row) => {
-                        if (
-                            row.product_name &&
-                            row.product_name.toLowerCase().includes(query.toLowerCase())
-                        ) {
+                        if (row.product_name && row.product_name.toLowerCase().includes(query.toLowerCase())) {
                             results.push({
                                 ...row,
                                 search_price: parseFloat(row.search_price || "0"),
@@ -55,16 +57,16 @@ const searchCSVFiles = (query) => {
     });
 };
 
-// Rota para busca
+// Rota para busca no CSV
 app.get("/search", async (req, res) => {
     const query = req.query.q;
     if (!query) {
         return res.status(400).json({ error: "A consulta 'q' é obrigatória" });
     }
-                            
+
     try {
         const results = await searchCSVFiles(query);
-                                
+
         // Rastrear buscas e armazenar o produto mais caro
         if (results.length > 0) {
             const topProduct = results[0]; // Produto com maior preço
@@ -74,14 +76,14 @@ app.get("/search", async (req, res) => {
                     : searchTracker[query]
                 : topProduct;
         }
-                         
+
         res.json(results);
     } catch (error) {
         console.error("Erro ao buscar produtos:", error);
         res.status(500).json({ error: "Erro interno ao buscar produtos" });
     }
 });
-       
+
 // Rota para obter os termos mais buscados
 app.get("/top-searches", (req, res) => {
     const topSearches = Object.entries(searchTracker)
@@ -90,67 +92,67 @@ app.get("/top-searches", (req, res) => {
             product: {
                 ...product,
                 search_price: parseFloat(product.search_price),
-            },              
+            },
         }))
         .sort((a, b) => b.product.search_price - a.product.search_price) // Ordenar pelos produtos mais caros
         .slice(0, 5); // Limitar aos 5 principais
-        
+
     res.json(topSearches);
 });
-            
-// Inicia o servidor
+
 // Configuração da conexão com o banco de dados
 const pool = new Pool({
-  user: 'feed_produtos_user', // Substitua pelo usuário do banco na Render
-  host: 'dpg-cub7al52ng1s73amrd00-a.oregon-postgres.render.com', // Host do banco na Render
-  database: 'feed_produtos', // Nome do banco
-  password: 'LUndYbcuwxtLIrJkXnj39LfJtOaqHKlq', // Substitua pela senha do banco
-  port: 5432,
-  ssl: { rejectUnauthorized: false }, // Configuração necessária para a Render
+    user: 'feed_produtos_user', // Substitua pelo usuário do banco na Render
+    host: 'dpg-cub7al52ng1s73amrd00-a.oregon-postgres.render.com', // Host do banco na Render
+    database: 'feed_produtos', // Nome do banco
+    password: 'LUndYbcuwxtLIrJkXnj39LfJtOaqHKlq', // Substitua pela senha do banco
+    port: 5432,
+    ssl: { rejectUnauthorized: false }, // Configuração necessária para a Render
 });
 
-// Middleware para lidar com JSON
-app.use(express.json());
+// Verifica a conexão com o banco de dados
+pool.connect()
+    .then(() => console.log("Conectado ao banco de dados com sucesso!"))
+    .catch(err => console.error("Erro ao conectar ao banco de dados:", err));
 
-// Rota de pesquisa de produtos
+// Rota de pesquisa de produtos no banco de dados
 app.get('/produtos/pesquisa', async (req, res) => {
-  const { query } = req.query; // Obtém o termo de pesquisa
+    const { q } = req.query; // Obtém o termo de pesquisa como 'q'
 
-  if (!query) {
-    return res.status(400).json({ error: 'Por favor, forneça um termo de pesquisa.' });
-  }
+    if (!q) {
+        return res.status(400).json({ error: 'Por favor, forneça um termo de pesquisa.' });
+    }
 
-  try {
-    const result = await pool.query(
-      "SELECT * FROM products WHERE name ILIKE $1",
-      [`%${query}%`]
-    );
+    try {
+        const result = await pool.query(
+            "SELECT * FROM products WHERE name ILIKE $1",
+            [`%${q}%`]
+        );
 
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
-    res.status(500).json({ error: 'Erro ao buscar produtos.' });
-  }
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao buscar produtos no banco:', error);
+        res.status(500).json({ error: 'Erro ao buscar produtos no banco.' });
+    }
 });
 
 // Rota para "Top Buscas" (exemplo: produtos mais consultados)
 app.get('/produtos/top', async (req, res) => {
-  try {
-    // Exemplo básico de top buscas: produtos com maior preço (apenas para demonstração)
-    const result = await pool.query(
-      "SELECT * FROM products ORDER BY price DESC LIMIT 10"
-    );
+    try {
+        // Exemplo básico de top buscas: produtos com maior preço
+        const result = await pool.query(
+            "SELECT * FROM products ORDER BY price DESC LIMIT 10"
+        );
 
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Erro ao buscar top produtos:', error);
-    res.status(500).json({ error: 'Erro ao buscar top produtos.' });
-  }
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao buscar top produtos:', error);
+        res.status(500).json({ error: 'Erro ao buscar top produtos.' });
+    }
 });
 
 // Inicializando o servidor
->>>>>>> 05ad444 (Atualizar configuração para banco de dados na Render)
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 

@@ -1,12 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const BACKEND_URL = "https://shopgp3.onrender.com"; // Substitua pelo 
-domínio do backend hospedado no Render
+    const BACKEND_URL = "https://shopgp3.onrender.com"; // Substitua pelo domínio do backend hospedado no Render
 
     const searchInput = document.getElementById("search-input");
     const searchButton = document.getElementById("search-button");
     const resultsContainer = document.getElementById("results-container");
-    const topSearchesContainer = 
-document.getElementById("top-searches-container");
+    const topSearchesContainer = document.getElementById("top-searches-container");
 
     // Função para buscar produtos no backend
     const searchProducts = async (query) => {
@@ -18,17 +16,14 @@ document.getElementById("top-searches-container");
                 </div>
             `;
 
-            const response = await 
-fetch(`${BACKEND_URL}/search?q=${encodeURIComponent(query)}`);
-            if (!response.ok) throw new Error("Erro ao buscar produtos no 
-servidor");
+            const response = await fetch(`${BACKEND_URL}/search?query=${encodeURIComponent(query)}`);
+            if (!response.ok) throw new Error("Erro ao buscar produtos no servidor");
 
             const products = await response.json();
             displayResults(query, products);
         } catch (error) {
             resultsContainer.innerHTML = `
-                <p>❌ Ocorreu um erro ao buscar os produtos. Por favor, 
-tente novamente mais tarde.</p>
+                <p>❌ Ocorreu um erro ao buscar os produtos. Por favor, tente novamente mais tarde.</p>
             `;
             console.error("Erro ao buscar os produtos:", error);
         }
@@ -38,8 +33,7 @@ tente novamente mais tarde.</p>
     const displayResults = (query, products) => {
         if (!products || products.length === 0) {
             resultsContainer.innerHTML = `
-                <p>❌ Nenhuma oferta encontrada para 
-"<strong>${query}</strong>".</p>
+                <p>❌ Nenhuma oferta encontrada para "<strong>${query}</strong>".</p>
             `;
             return;
         }
@@ -48,17 +42,14 @@ tente novamente mais tarde.</p>
             .map(
                 (product) => `
                 <div class="result-item">
-                    <a href="${product.aw_deep_link}" target="_blank">
-                        <img src="${product.merchant_image_url}" 
-alt="${product.product_name}" class="product-thumb">
+                    <a href="${product.deep_link}" target="_blank">
+                        <img src="${product.image_url}" alt="${product.name}" class="product-thumb">
                     </a>
                     <div class="product-info">
-                        <a href="${product.aw_deep_link}" target="_blank">
-                            <h3>${truncateText(product.product_name, 
-50)}</h3>
+                        <a href="${product.deep_link}" target="_blank">
+                            <h3>${truncateText(product.name, 50)}</h3>
                         </a>
-                        <p class="price">💰 R$ 
-${product.search_price.toFixed(2)}</p>
+                        <p class="price">💰 R$ ${product.price.toFixed(2)}</p>
                     </div>
                 </div>
             `
@@ -66,8 +57,7 @@ ${product.search_price.toFixed(2)}</p>
             .join("");
 
         resultsContainer.innerHTML = `
-            <p>🔎 Essas são as melhores opções disponíveis para 
-"<strong>${query}</strong>":</p>
+            <p>🔎 Essas são as melhores opções disponíveis para "<strong>${query}</strong>":</p>
             ${resultsHTML}
         `;
     };
@@ -76,8 +66,7 @@ ${product.search_price.toFixed(2)}</p>
     const fetchTopSearches = async () => {
         try {
             const response = await fetch(`${BACKEND_URL}/top-searches`);
-            if (!response.ok) throw new Error("Erro ao buscar os top 
-termos de busca");
+            if (!response.ok) throw new Error("Erro ao buscar os top termos de busca");
 
             const topSearches = await response.json();
 
@@ -92,13 +81,10 @@ termos de busca");
                 .slice(0, 4) // Limita a exibição aos primeiros 4 itens
                 .map(
                     (item) => `
-                    <div class="product top-search-item" 
-data-term="${item.term}">
-                        <img src="${item.product.merchant_image_url}" 
-alt="${item.product.product_name}">
-                        <h3>${truncateText(item.product.product_name, 
-30)}</h3>
-                        <p>R$ ${item.product.search_price.toFixed(2)}</p>
+                    <div class="product top-search-item" data-term="${item.term}">
+                        <img src="${item.image_url}" alt="${item.name}">
+                        <h3>${truncateText(item.name, 30)}</h3>
+                        <p>R$ ${item.price.toFixed(2)}</p>
                     </div>
                 `
                 )
@@ -113,17 +99,14 @@ alt="${item.product.product_name}">
                 </section>
             `;
 
-            // Adicionar eventos de clique para realizar busca com rolagem 
-suave para o topo
-            const topSearchItems = 
-document.querySelectorAll(".top-search-item");
+            // Adicionar eventos de clique para realizar busca com rolagem suave para o topo
+            const topSearchItems = document.querySelectorAll(".top-search-item");
             topSearchItems.forEach((item) => {
                 item.addEventListener("click", () => {
                     const term = item.getAttribute("data-term");
                     if (term) {
                         searchProducts(term);
-                        
-document.getElementById("search-input").scrollIntoView({
+                        document.getElementById("search-input").scrollIntoView({
                             behavior: "smooth",
                             block: "center",
                         });
@@ -132,17 +115,14 @@ document.getElementById("search-input").scrollIntoView({
             });
         } catch (error) {
             topSearchesContainer.innerHTML = `
-                <p>❌ Ocorreu um erro ao carregar os termos mais 
-buscados.</p>
+                <p>❌ Ocorreu um erro ao carregar os termos mais buscados.</p>
             `;
-            console.error("Erro ao buscar os top termos de busca:", 
-error);
+            console.error("Erro ao buscar os top termos de busca:", error);
         }
     };
 
     // Função utilitária para truncar textos longos
-    const truncateText = (text, maxLength) => (text.length > maxLength ? 
-text.substring(0, maxLength) + "..." : text);
+    const truncateText = (text, maxLength) => (text.length > maxLength ? text.substring(0, maxLength) + "..." : text);
 
     // Eventos
     searchButton.addEventListener("click", () => {
@@ -158,8 +138,7 @@ text.substring(0, maxLength) + "..." : text);
         }
     });
 
-    // Inicializar carregamento dos Top Termos de Busca ao carregar a 
-página
+    // Inicializar carregamento dos Top Termos de Busca ao carregar a página
     fetchTopSearches();
 });
 
